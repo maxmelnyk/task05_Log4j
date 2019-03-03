@@ -1,0 +1,75 @@
+Configuration:
+  name: Log4j2_Config
+  Properties:
+    Property:
+      name: log-path
+      value: logs
+  Appenders:
+
+    Console:
+      name: Console_Appender
+      PatternLayout:
+        Pattern: "%highlight{%-5level}{FATAL=bg_red} %style{%date{yyyy-MM-dd HH:mm:ss.SSS}}{blue} [%t] %class{1}:%L - %highlight{%msg} %xEx{short}%n"
+      Filters:
+        ThresholdFilter:
+          level: warn
+          onMatch: DENY
+          onMismatch: NEUTRAL
+
+    RollingFile:
+    - name: RollingFile_Appender
+      fileName: ${log-path}/rollingfile.log
+      filePattern: "logs/archive/rollingfile.log.%d{yyyy-MM-dd}.gz"
+      PatternLayout:
+        Pattern: "[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %class{1}:%L - %msg%xEx{short}%n"
+      Policies:
+        TimeBasedTriggeringPolicy:
+          interval: 1
+          modulate: true
+        SizeBasedTriggeringPolicy:
+          size: 1MB
+
+    SMTP:
+      name: MailAppender
+      subject: "Error Log"
+      to: "yourmail@gmail.com"
+      from: "mymail@gmail.com"
+      smtpHost: "smtp.gmail.com"
+      smtpPort: 465
+      smtpProtocol: smtps
+      smtpUsername: "dima.melnyk1998@gmail.com"
+      smtpPassword: "password"
+      bufferSize: 512
+      HTMLLayout:
+        charset: "UTF-8"
+        title: "Logs from Melnyk project Log4Jf"
+      Filters:
+        ThresholdFilter:
+          level: fatal
+          onMatch: DENY
+          onMismatch: NEUTRAL
+
+    SMS:
+      name: SMSsender
+      PatternLayout:
+        Pattern: "[%-5level] %d{yyyy-MM-dd HH:mm:ss} - %msg %xEx{short}"
+    Async:
+      name: AsyncSMS
+      AppenderRef:
+        ref: SMSsender
+
+  Loggers:
+
+    Logger:
+    - name: com.melnyk.logging
+      additivity: false
+      level: all
+      AppenderRef:
+      - ref: Console_Appender
+        level: info
+      - ref: RollingFile_Appender
+        level: warn
+      - ref: MailAppender
+        level: error
+      - ref: AsyncSMS
+        level: fatal
